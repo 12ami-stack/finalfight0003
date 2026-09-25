@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8"><title>STREET SANCTION - SCROLL</title>
+    <style>
+        body { margin: 0; background: #07070d; color: #fff; font-family: sans-serif; overflow: hidden; user-select: none; }
+        #g { position: relative; width: 800px; height: 450px; margin: 50px auto; background: linear-gradient(#151026, #070714); border: 4px solid #1e1b29; box-shadow: 0 0 35px rgba(255,0,80,.4); overflow: hidden; }
+        canvas { position: absolute; top: 0; left: 0; z-index: 10; }
+        #u { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; text-align: center; }
+        .t { font-size: 34px; color: #ff0055; text-shadow: 2px 2px #00ffff, -2px -2px #000; margin-top: 10px; font-weight: 900; }
+        .i { position: absolute; bottom: 15px; width: 100%; font-size: 16px; color: #a5b4fc; animation: b 1.2s infinite; font-weight: bold; }
+        @keyframes b { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        #d { position: absolute; background: rgba(10,5,15,.9); border: 2px solid #ff0055; color: #fecdd3; padding: 6px 12px; border-radius: 4px; font-size: 14px; font-weight: bold; z-index: 30; display: none; transform: translate(-50%, -100%); box-shadow: 0 0 10px #ff0055; }
+    </style>
+</head>
+<body>
+<div id="g">
+    <canvas id="c" width="800" height="450"></canvas>
+    <div id="u"><div class="t">STREET SANCTION</div><div id="i" class="i">画面クリックで 屈強な囚人を召喚しろ！</div></div>
+    <div id="d"></div>
+</div>
+<script>
+    const cv = document.getElementById('c'), ctx = cv.getContext('2d'), de = document.getElementById('d'), ie = document.getElementById('i');
+    let st = 'W', tm = 0, ps = [], es = [], pt = [], ft = [], cx = 0;
+    const cy = { x: 80, y: 300, w: 30, h: 70, s: 'I' };
+    
+    function ie_() { es = []; for (let i = 0; i < 15; i++) es.push({ id: i, x: 380 + (i * 120) + Math.random() * 30, y: 275 + (i % 4) * 22, w: 36, h: 76, hp: 1, ih: false, id: false, vx: 0, vy: 0 }); }
+    ie_();
+
+    document.getElementById('g').addEventListener('click', () => {
+        if (st === 'W') { st = 'O'; ie.style.display = 'none'; ps = [{ x: -80, y: 265, w: 55, h: 95, c: '#2563eb', s: 7.5, cd: 0 }, { x: -150, y: 315, w: 60, h: 100, c: '#1d4ed8', s: 7, cd: 0 }]; sd(cy.x, cy.y - 80, "ひぃっ！やっておしまい！", 1500); setTimeout(() => { if(ps.length) sd(ps[0].x - cx, ps[0].y, "オラオラオラァーーッ！！", 1800); }, 500); }
+        else if (st === 'H' && cx <= 10) { st = 'S'; cy.s = 'W'; hd(); }
+        else if (st === 'C') { ie_(); cy.x = 80; cy.s = 'I'; ps = []; cx = 0; st = 'W'; ie.innerText = "画面クリックで 屈強な囚人を召喚しろ！"; ie.style.display = 'block'; }
+    });
+
+    function sd(x, y, t, d) { de.innerText = t; de.style.display = 'block'; de.style.left = x + 'px'; de.style.top = y + 'px'; if (d) setTimeout(() => { if (de.innerText === t) hd(); }, d); }
+    function hd() { de.style.display = 'none'; }
+    function ch(x, y, t = "HIT!") { ft.push({ x: x, y: y - 20, t: t, tm: 25, c: '#facc15' }); for (let i = 0; i < 8; i++) pt.push({ x: x, y: y, vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12, r: Math.random() * 3 + 2, c: Math.random() > .4 ? '#ff0055' : '#ffea00', l: 18 }); }
+
+    function up() {
+        tm++; let ac = es.filter(e => !e.id);
+        if (st === 'O') {
+            ps.forEach((p, i) => {
+                p.cd = Math.max(0, p.cd - 1);
+                if (ac.length > 1) {
+                    let t = ac[i % ac.length];
+                    if (t) {
+                        p.x += Math.min(p.s, Math.max(-p.s, (t.x - 45) - p.x)); p.y += Math.min(2.5, Math.max(-2.5, t.y - p.y));
+                        if (Math.abs((t.x - 45) - p.x) < 55 && p.cd === 0) { p.cd = 12; ch(t.x, t.y - 30, "オラァ！"); t.hp -= 0.25; if (t.hp <= 0) { t.id = true; t.vx = 9; t.vy = -7; } }
+                    }
+                } else if (ac.length === 1) {
+                    let t = ac[0]; p.x += Math.min(p.s, Math.max(-p.s, (t.x - 10) - p.x)); p.y += Math.min(2.5, Math.max(-2.5, t.y - p.y));
+                    if (Math.abs((t.x - 10) - p.x) < 20 && Math.abs(t.y - p.y) < 20 && !t.ih) { t.ih = true; st = 'H'; }
+                } else { p.x += p.s; }
+            });
+            if (ps.length) { let tx = ps[0].x - 300; if (cx < tx) cx += (tx - cx) * 0.1; if (cx > 1600) cx = 1600; }
+        }
+        if (st === 'H') {
+            let h = es.find(e => e.ih);
+            if (cx > 0) {
+                cx -= 8; if (cx < 0) cx = 0;
+                if (ps.length) { ps[0].x = cx + 260; ps[1].x = cx + 210; ps[0].y = 290; ps[1].y = 330; }
+                if (h) { h.x = ps[0].x + 30; h.y = ps[0].y; }
+            } else {
+                if (ps.length && de.style.display === 'none' && ie.style.display !== 'block') {
+                    sd(ps[0].x + 40 - cx, ps[0].y - 90, "「コーディの旦那、どうぞ制裁を！」", 4000);
+                    ie.innerText = "画面をクリックしてビシッと制裁を下せ！"; ie.style.display = 'block';
+                }
+            }
+        }
+        if (st === 'S') {
+            let h = es.find(e => e.ih);
+            if (h) {
+                if (cy.x < h.x - 45) { cy.x += 4.5; } 
+                else {
+                    cy.s = 'P'; st = 'IM'; sd(cy.x - cx, cy.y - 80, "フ、フンッ！！(激怒)", 1000);
+                    setTimeout(() => {
+                        ch(h.x + 15, h.y - 40, "滅・殺・昇・竜！"); h.ih = false; h.id = true; h.vx = 16; h.vy = -14;
+                        if (ps.length) sd(ps[0].x - cx, ps[0].y - 90, "流死は旦那ァー！！", 2000);
+                        st = 'C'; setTimeout(() => { ie.innerText = "ステージクリア！ クリックで次のストリートへ"; ie.style.display = 'block'; }, 1200);
+                    }, 400);
+                }
+            }
+        }
+        es.forEach(e => { if (e.id) { e.x += e.vx; e.y += e.vy; e.vy += 0.65; if (e.y > 390) { e.y = 390; e.vy = -e.vy * 0.35; e.vx *= 0.75; } } });
+        pt.forEach((p, i) => { p.x += p.vx; p.y += p.vy; if (--p.l <= 0) pt.splice(i, 1); });
+        ft.forEach((t, i) => { t.y -= 0.6; if (--t.tm <= 0) ft.splice(i, 1); });
+    }
+
+    function drP(x, y, w, h, f, t) {
+        ctx.fillStyle = f; ctx.fillRect(x - cx, y, w, h); 
+        ctx.fillStyle = '#fbcfe8'; ctx.fillRect(x - cx + (t ? -4 : 6), y - 16, 20, 16); 
+        ctx.fillStyle = '#1e1b4b'; ctx.fillRect(x - cx + (t ? -6 : 14), y - 22, 14, 8); 
+    }
+
+    function dr() {
+        ctx.clearRect(0, 0, cv.width, cv.height); 
+        
+        ctx.fillStyle = '#1a1625'; ctx.fillRect(0, 215, cv.width, 90);
+        ctx.fillStyle = '#2e263f'; ctx.fillRect(0, 300, cv.width, 5);
+        ctx.fillStyle = '#ff0055'; ctx.globalAlpha = 0.15; ctx.font = "900 18px sans-serif";
+        for(let i=0; i<4; i++) ctx.fillText("SLUM STREET ☠", 50 + (i*700) - cx, 60); ctx.globalAlpha = 1.0;
+
+        ctx.fillStyle = "rgba(5, 5, 10, 0.4)";
+        ctx.beginPath(); ctx.ellipse(cy.x + 15 - cx, cy.y + 70, 18, 6, 0, 0, Math.PI*2); ctx.fill();
+        ps.forEach(p => { ctx.beginPath(); ctx.ellipse(p.x + p.w/2 - cx, p.y + p.h, 28, 8, 0, 0, Math.PI*2); ctx.fill(); });
+        es.forEach(e => { if(!e.id) { ctx.beginPath(); ctx.ellipse(e.x + 18 - cx, e.y + 76, 20, 6, 0, 0, Math.PI*2); ctx.fill(); } });
+        
+        es.forEach(e => {
+            ctx.save();
+            if (e.id) { ctx.translate(e.x + e.w/2 - cx, e.y + e.h/2); ctx.rotate(tm * 0.15); ctx.fillStyle = '#ef4444'; ctx.fillRect(-e.w/2, -e.h/2, e.w, e.h); ctx.fillStyle = '#f43f5e'; ctx.fillRect(-6, -e.h/2 - 12, 12, 12); } 
+            else if (e.ih) { ctx.translate(e.x - cx, e.y - 15); ctx.fillStyle = '#dc2626'; ctx.fillRect(0, 0, e.w, e.h); ctx.fillStyle = '#fda4af'; ctx.fillRect(6, -14, 20, 14); ctx.fillStyle = '#f43f5e'; ctx.fillRect(10, -24, 10, 10); ctx.fillStyle = '#fff'; ctx.fillRect(6, e.h, 6, 12 + Math.sin(tm*0.6)*6); ctx.fillRect(22, e.h, 6, 12 + Math.cos(tm*0.6)*6); } 
+            else { drP(e.x, e.y, e.w, e.h, '#dc2626', true); ctx.fillStyle = '#ff0055'; ctx.fillRect(e.x - cx + 4, e.y - 24, 12, 10); } ctx.restore();
+        });
+        
+        ps.forEach(p => {
+            drP(p.x, p.y, p.w, p.h, p.c, false); ctx.fillStyle = "#ffffff"; for(let i=12; i<p.h; i+=24) ctx.fillRect(p.x - cx, p.y + i, p.w, 8);
+            if (st === 'O' && p.cd > 4) { ctx.fillStyle = "#fdba74"; ctx.fillRect(p.x - cx + p.w - 4, p.y + 20, 32, 14); ctx.fillStyle = "#fff"; ctx.fillRect(p.x - cx + p.w + 20, p.y + 18, 10, 10); }
+        });
+        
+        let ccx = cy.x - cx, cy_ = cy.y;
+        if (cy.s === 'P') { ctx.fillStyle = '#1e3a8a'; ctx.fillRect(ccx, cy_, cy.w, cy.h); ctx.fillStyle = '#fef08a'; ctx.fillRect(ccx - 5, cy_, cy.w + 10, 35); ctx.fillStyle = '#fbcfe8'; ctx.fillRect(ccx + 8, cy_ - 16, 20, 16); ctx.fillStyle = '#facc15'; ctx.fillRect(ccx + 6, cy_ - 22, 22, 8); ctx.fillStyle = "#ff0055"; ctx.fillRect(ccx + cy.w, cy_ + 14, 42, 16); } 
+        else if (cy.s === 'W') { let wy = Math.sin(tm * 0.35) * 4; ctx.fillStyle = '#1e3a8a'; ctx.fillRect(ccx, cy_ + wy, cy.w, cy.h); ctx.fillStyle = '#fef08a'; ctx.fillRect(ccx, cy_ + wy, cy.w, 35); ctx.fillStyle = '#fbcfe8'; ctx.fillRect(ccx + 6, cy_ - 16 + wy, 20, 16); ctx.fillStyle = '#facc15'; ctx.fillRect(ccx + 8, cy_ - 22 + wy, 20, 7); } 
+        else { let sx = (Math.random() - .5) * 1.5; ctx.fillStyle = '#1e3a8a'; ctx.fillRect(ccx + sx, cy_, cy.w, cy.h); ctx.fillStyle = '#fef08a'; ctx.fillRect(ccx + sx, cy_, cy.w, 35); ctx.fillStyle = '#fbcfe8'; ctx.fillRect(ccx + 6 + sx, cy_ - 16, 20, 16); ctx.fillStyle = '#facc15'; ctx.fillRect(ccx + 8 + sx, cy_ - 22, 20, 7); ctx.fillStyle = "#000"; ctx.fillRect(ccx + 16 + sx, cy_ - 10, 8, 3); }
+        
+        pt.forEach(p => { ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x - cx, p.y, p.r, 0, Math.PI * 2); ctx.fill(); });
+        ctx.font = "bold 18px sans-serif"; 
+        ft.forEach(t => { ctx.fillStyle = t.c; ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.strokeText(t.t, t.x - cx, t.y); ctx.fillText(t.t, t.x - cx, t.y); });
+    }
+
+    function lp() { 
+        up(); 
+        dr(); 
+        requestAnimationFrame(lp); 
+    }
+    
+    lp();
+</script>
+</body>
+</html>
